@@ -1,0 +1,19 @@
+BEGIN;
+
+-- TRUNCATE TABLE ล้าง Table ทั้งหมด
+TRUNCATE TABLE "users" CASCADE;
+TRUNCATE TABLE "oauth" CASCADE;
+TRUNCATE TABLE "roles" CASCADE;
+TRUNCATE TABLE "products" CASCADE;
+TRUNCATE TABLE "categories" CASCADE;
+TRUNCATE TABLE "products_categories" CASCADE;
+TRUNCATE TABLE "images" CASCADE;
+TRUNCATE TABLE "orders" CASCADE;
+TRUNCATE TABLE "products_orders" CASCADE;
+
+-- ล้างข้อมูลที่รันเป็น Sequence
+
+SELECT SETVAL ((SELECT PG_GET_SERIAL_SEQENCE('"roles"','id')),1, FALSE);
+SELECT SETVAL ((SELECT PG_GET_SERIAL_SEQENCE('"categories"','id')),1, FALSE);
+
+COMMIT;
