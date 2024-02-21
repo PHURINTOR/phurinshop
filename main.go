@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/PHURINTOR/phurinshop/config"
+	"github.com/PHURINTOR/phurinshop/modules/servers"
+	"github.com/PHURINTOR/phurinshop/pkg/database"
 )
 
 // ----------------------------------------- Function path Run main.exe -------------------------
@@ -19,9 +21,14 @@ func envPath() string {
 func main() {
 	fmt.Println("Hello")
 	cfg := config.LoadConfig(envPath())
-	fmt.Println(cfg.App())
-	fmt.Println(cfg.Db())
-	fmt.Println(cfg.Jwt())
-
 	//Run = air -c .air.dev.toml
+
+	//Connect Db
+	db := database.DbConnect(cfg.Db())
+	defer db.Close()
+
+	fmt.Print(db)
+
+	//Start server Gofiber
+	servers.NewServer(cfg, db).Start()
 }
