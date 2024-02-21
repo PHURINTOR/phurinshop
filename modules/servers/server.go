@@ -37,6 +37,14 @@ func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 }
 
 func (s *server) Start() {
+
+	//Middlewares
+
+	//Modules
+	v1 := s.app.Group("v1")
+	mudules := NewModule(v1, s)
+	mudules.MonitorModule()
+
 	// Gaceful shutdown		จะค่อยๆ ปิด หากมีเหตุไม่คาดฝันจะค่อยๆ คืนทรัพยากร
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
