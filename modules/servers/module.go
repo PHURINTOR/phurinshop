@@ -1,6 +1,9 @@
 package servers
 
 import (
+	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewareUsecases"
+	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
 	monitorHanders "github.com/PHURINTOR/phurinshop/modules/monitors/monitorHandlers"
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,14 +19,22 @@ type IModuleFactory interface {
 type moduleFactory struct {
 	router fiber.Router
 	server *server
+	mid    middlewaresHandlers.IMidlewareHandlers
 }
 
 // constructor , inital
-func NewModule(r fiber.Router, s *server) IModuleFactory {
+func NewModule(r fiber.Router, s *server, mid middlewaresHandlers.IMidlewareHandlers) IModuleFactory {
 	return &moduleFactory{
 		router: r,
 		server: s,
+		mid:    mid,
 	}
+}
+
+func InitMiddlewares(s *server) middlewaresHandlers.IMidlewareHandlers {
+	repository := middlewaresRepositories.MiddlewareRepository(s.db)
+	usecase := middlewareUsecases.MiddlewareUsecase(repository)
+	return middlewaresHandlers.MiddlewareHandler(s.cfg, usecase)
 }
 
 // implement missing

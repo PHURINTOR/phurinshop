@@ -39,11 +39,17 @@ func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 func (s *server) Start() {
 
 	//Middlewares
+	middlewares := InitMiddlewares(s)
+	s.app.Use(middlewares.Logger())
+	s.app.Use(middlewares.Cors()) //คือคำสั่งที่สั่งให้ middleware ถูกประยุกค์ใช้ กับ endpoint ทั้งหมด
 
 	//Modules
 	v1 := s.app.Group("v1")
-	mudules := NewModule(v1, s)
+	mudules := NewModule(v1, s, middlewares)
 	mudules.MonitorModule()
+
+	//RouterCheck
+	s.app.Use(middlewares.RouterCheck())
 
 	// Gaceful shutdown		จะค่อยๆ ปิด หากมีเหตุไม่คาดฝันจะค่อยๆ คืนทรัพยากร
 	c := make(chan os.Signal, 1)

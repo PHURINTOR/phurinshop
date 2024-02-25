@@ -36,4 +36,4 @@ func (h *monitorHander) HealthCheck(c *fiber.Ctx) error {
 	//	entiites.NewResponse(c).Success(fiber.StatusOK, res).Res()
 }
 
-//Export Handler ไปทำงานกับ module
+//Export Handler ไปทำงานกับ module  ที่อยู่ใน module server
