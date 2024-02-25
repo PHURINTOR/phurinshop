@@ -2,6 +2,7 @@ package monitorHanders
 
 import (
 	"github.com/PHURINTOR/phurinshop/config"
+	"github.com/PHURINTOR/phurinshop/modules/entities"
 	"github.com/PHURINTOR/phurinshop/modules/monitors"
 	"github.com/gofiber/fiber/v2"
 )
@@ -30,7 +31,9 @@ func (h *monitorHander) HealthCheck(c *fiber.Ctx) error {
 		Name:    h.cfg.App().Name(),
 		Version: h.cfg.App().Version(),
 	}
-	return c.Status(fiber.StatusOK).JSON(res)
+	//return c.Status(fiber.StatusOK).JSON(res)
+	return entities.NewErrorResponse(c).Success(fiber.StatusOK, res).Res()
+	//	entiites.NewResponse(c).Success(fiber.StatusOK, res).Res()
 }
 
 //Export Handler ไปทำงานกับ module
