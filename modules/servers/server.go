@@ -51,6 +51,7 @@ func (s *server) Start() {
 	//RouterCheck
 	s.app.Use(middlewares.RouterCheck())
 
+	
 	// Gaceful shutdown		จะค่อยๆ ปิด หากมีเหตุไม่คาดฝันจะค่อยๆ คืนทรัพยากร
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
