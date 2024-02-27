@@ -5,6 +5,9 @@ import (
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
 	monitorHanders "github.com/PHURINTOR/phurinshop/modules/monitors/monitorHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/users/usersHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/users/usersRepositories"
+	"github.com/PHURINTOR/phurinshop/modules/users/usersUsecases"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,6 +15,7 @@ import (
 
 type IModuleFactory interface {
 	MonitorModule()
+	UsersModule()
 }
 
 //struct
@@ -41,4 +45,15 @@ func InitMiddlewares(s *server) middlewaresHandlers.IMidlewareHandlers {
 func (m *moduleFactory) MonitorModule() { //ไม่มี return เพราะอยากทำให้เป็น router เฉยๆ  แล้ว export ออกไปใช้ใน server
 	handler := monitorHanders.MonitorHandler(m.server.cfg)
 	m.router.Get("/", handler.HealthCheck)
+}
+
+func (m *moduleFactory) UsersModule() {
+	repository := usersRepositories.UserRepository(m.server.db)
+	usecase := usersUsecases.UserUsecase(m.server.cfg, repository)
+	handler := usersHandlers.UserHandler(m.server.cfg, usecase)
+
+	// /v1/users/sign
+
+	router := m.router.Group("/users")
+	router.Post("/signup", handler.SignUpCustomer)
 }
