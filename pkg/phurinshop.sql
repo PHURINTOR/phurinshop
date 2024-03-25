@@ -12,7 +12,7 @@ CREATE TABLE "oauth" (
   "id" varchar PRIMARY KEY,
   "user_id" varchar,
   "access_token" varchar,
-  "refesh_token" varchar,
+  "refresh_token" varchar,
   "created_at" timestamp,
   "updated_at" timestamp
 );
