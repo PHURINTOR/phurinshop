@@ -52,8 +52,27 @@ func (m *moduleFactory) UsersModule() {
 	usecase := usersUsecases.UserUsecase(m.server.cfg, repository)
 	handler := usersHandlers.UserHandler(m.server.cfg, usecase)
 
-	// /v1/users/sign
-
+	//============================  /v1/users/ =================================
 	router := m.router.Group("/users")
+
+	//Create User
 	router.Post("/signup", handler.SignUpCustomer)
+
+	//Login
+	router.Post("/signin", handler.SignIn)
+	router.Post("/refresh", handler.RefreshPassport)
+
+	//Create Admin
+	router.Post("/signout", handler.SignOut)
+	router.Post("/signup-admin", handler.SignUpAdmin)
+	// Initail Admin เข้ามาใน database 1 คน
+	// generate Admin Key
+	// ทุกครั้งที่ Create Admin เพิ่มต้องเอา Admin key Token มาด้วย ผ่าน middleware
+	//** ต่อให้ใครได้ Admin Token ไป  แต่ไม่มี key Admin จาก Env มาประกอบก็จะไม่สามารถ Gen ได้
+	// Newadmin = AdminToken + key Admin (env)
+	router.Get("/admin/secret", m.mid.JwtAuth(), m.mid.Authorize(2), handler.GenerateAdminToken)
+	//router.Get("/admin/secret", m.mid.JwtAuth(), m.mid.Authorize(1, 2), handler.GenerateAdminToken)
+
+	//Authorization
+	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
 }

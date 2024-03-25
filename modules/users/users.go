@@ -30,8 +30,45 @@ type UserToken struct {
 }
 
 type UserPassport struct {
-	User  *User      `json:"user"`
+	User  *User      `json:"user"` //response กลับตอน login
 	Token *UserToken `json:"token"`
+}
+
+// -------------------------------- Authentication
+type UserCredential struct {
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password" form:"password"`
+}
+
+type UserCredentialCheck struct {
+	Id       string `db:"id"`
+	Email    string `db:"email"`
+	Password string `db:"password"`
+	Username string `db:"username"`
+	RoleId   int    `db:"role_id"`
+}
+
+// -------------------------------- JWT
+type UserClaims struct {
+	//ไม่ควรเป็นข้อมูลที่ secert จนเกินไป เพราะว่า playload/Claims จะเข้ารหัสแบบ base 64 ต่อให้ไม่มี key ก็สามารถถอดรหัสได้
+	Id     string `db:"id" json:"id"`
+	RoleId int    `db:"roleid" json:"roleid"`
+}
+
+// -------------------------------- User Refresh Token
+type UserRefreshCredential struct {
+	RefreshToken string `json:"refresh_token" form:"refresh_token"` //Check Parse Token Refresh  ==> auth
+}
+
+// -------------------------------- User Oauth
+type Oauth struct {
+	Id     string `db:"id" json:"id"`           //Role Id
+	UserId string `db:"user_id" json:"user_id"` //User Id
+}
+
+// -------------------------------- User Remove Oauth
+type UserRemoveCredential struct {
+	OauthId string `json:"oauth_id" form:"oauth_id"`
 }
 
 // =========================================  Function missing of Struct =========================================
@@ -55,5 +92,3 @@ func (obj *UserRegisterReq) IsEmail() bool {
 	}
 	return match
 }
-
-// --------------------------------  Function
