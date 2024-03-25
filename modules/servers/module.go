@@ -1,6 +1,9 @@
 package servers
 
 import (
+	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoRepositories"
+	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoUsecases"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewareUsecases"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
@@ -47,6 +50,7 @@ func (m *moduleFactory) MonitorModule() { //ไม่มี return เพรา�
 	m.router.Get("/", handler.HealthCheck)
 }
 
+// ============================================================ UserModule ===========================================
 func (m *moduleFactory) UsersModule() {
 	repository := usersRepositories.UserRepository(m.server.db)
 	usecase := usersUsecases.UserUsecase(m.server.cfg, repository)
@@ -75,4 +79,17 @@ func (m *moduleFactory) UsersModule() {
 
 	//Authorization
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
+}
+
+// ============================================================ AppinfoModule ===========================================
+// ============================  /v1/Appinfo/ =================================
+func (m *moduleFactory) AppinfoModule() {
+
+	repository := appinfoRepositories.AppinfoRepository(m.server.db)
+	usecase := appinfoUsecases.AppinfoUsecase(repository)
+	handler := appinfoHandlers.AppinfoHandler(m.server.cfg, usecase)
+	router := m.router.Group("/appinfo")
+	_ = router
+	_ = handler
+
 }
