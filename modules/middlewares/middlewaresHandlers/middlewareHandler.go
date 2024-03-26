@@ -25,6 +25,10 @@ type IMidlewareHandlers interface {
 
 	//Authorizetion
 	Authorize(expectRoleId ...int) fiber.Handler
+
+	//======================= ApiKey
+	//ApiKeyAuth
+	ApiKeyAuth() fiber.Handler
 }
 
 // ------------------------------------ Struct ------------------------------------
@@ -43,6 +47,10 @@ const (
 
 	//find Role
 	authorizeErr middlewareHandlersErrCode = "middleware-004"
+
+	//============ ApiKey
+	//ApikeyAuth
+	apiKeyAuthErr middlewareHandlersErrCode = "middleware-005"
 )
 
 // ------------------------------- Constructor -------------------------------------
@@ -170,5 +178,21 @@ func (h *middlewareHandlers) Authorize(expectRoleId ...int) fiber.Handler {
 			string(authorizeErr),
 			"no permission",
 		).Res()
+	}
+}
+
+// ----------------------------------- Middleware ApiKey
+func (h *middlewareHandlers) ApiKeyAuth() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		key := c.Get("X-Api-Key")
+		if _, err := auth.ParseApiKey(h.cfg.Jwt(), key); err != nil {
+			return entities.NewErrorResponse(c).Error(
+				fiber.ErrUnauthorized.Code,
+				string(apiKeyAuthErr),
+				"apikey is invalid or required",
+			).Res()
+
+		}
+		return c.Next()
 	}
 }
