@@ -19,6 +19,7 @@ import (
 type IModuleFactory interface {
 	MonitorModule()
 	UsersModule()
+	AppinfoModule()
 }
 
 //struct
@@ -60,15 +61,15 @@ func (m *moduleFactory) UsersModule() {
 	router := m.router.Group("/users")
 
 	//Create User
-	router.Post("/signup", handler.SignUpCustomer)
+	router.Post("/signup", m.mid.ApiKeyAuth(), handler.SignUpCustomer)
 
 	//Login
-	router.Post("/signin", handler.SignIn)
-	router.Post("/refresh", handler.RefreshPassport)
+	router.Post("/signin", m.mid.ApiKeyAuth(), handler.SignIn)
+	router.Post("/refresh", m.mid.ApiKeyAuth(), handler.RefreshPassport)
 
 	//Create Admin
-	router.Post("/signout", handler.SignOut)
-	router.Post("/signup-admin", handler.SignUpAdmin)
+	router.Post("/signout", m.mid.ApiKeyAuth(), handler.SignOut)
+	router.Post("/signup-admin", m.mid.JwtAuth(), m.mid.Authorize(2), handler.SignUpAdmin)
 	// Initail Admin เข้ามาใน database 1 คน
 	// generate Admin Key
 	// ทุกครั้งที่ Create Admin เพิ่มต้องเอา Admin key Token มาด้วย ผ่าน middleware
@@ -78,7 +79,7 @@ func (m *moduleFactory) UsersModule() {
 	//router.Get("/admin/secret", m.mid.JwtAuth(), m.mid.Authorize(1, 2), handler.GenerateAdminToken)
 
 	//Authorization
-	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
+	router.Get("/:user_id", m.mid.ApiKeyAuth(), m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
 }
 
 // ============================================================ AppinfoModule ===========================================
@@ -89,7 +90,17 @@ func (m *moduleFactory) AppinfoModule() {
 	usecase := appinfoUsecases.AppinfoUsecase(repository)
 	handler := appinfoHandlers.AppinfoHandler(m.server.cfg, usecase)
 	router := m.router.Group("/appinfo")
-	_ = router
-	_ = handler
+
+	//Gen API key
+	router.Get("/apikey", m.mid.JwtAuth(), m.mid.Authorize(1, 2), handler.GenerateApiKey)
+
+	//Find Category
+	router.Get("/categories", m.mid.ApiKeyAuth(), handler.FindCategory)
+
+	//Add Category
+	router.Post("/categories", m.mid.JwtAuth(), m.mid.Authorize(2), handler.AddCategory)
+
+	//Delete Category
+	router.Delete("/:category_id/categories", m.mid.JwtAuth(), m.mid.Authorize(2), handler.RemoveCategory)
 
 }

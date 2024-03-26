@@ -19,8 +19,13 @@ type IPhurinshopAuth interface {
 	SignToken() string //ไม่จำเป็นต้องเรียกใช้งาน Constructor แค่ pass ค่าเข้าไปก็เพียงพอ เรียกดู playload ได้เลย
 }
 
-// Interface Factory #1
+// Interface Factory #1 : User
 type IPhurinshopAdmin interface {
+	SignToken() string
+}
+
+// Interface Factory #2 : API key
+type IPhurinshopApiKey interface {
 	SignToken() string
 }
 
@@ -34,7 +39,7 @@ const (
 	ApiKey  TokenType = "apikey"
 )
 
-// --------------------------------------- Factory Main --------------------------
+// --------------------------------------- Struct Factory Main  User--------------------------
 type phurinshopAuth struct {
 	mapClaims *phurinshopMapClaims
 	cfg       config.IJwtConfig
@@ -51,6 +56,12 @@ type phurinshopMapClaims struct {
 	jwt.RegisteredClaims                   //ใน golang-jwt บังคับต้องมี
 }
 
+// --------------------------------------- Stuct  API key--------------------------
+// API key มีไว้เพื่อตรวจสอบ Token ที่สามารถเข้าติดต่อกับ API เราได้ เช่นต้องเป็น จาก Front-end ที่เราอนุญาต
+type phurinshopApiKey struct {
+	*phurinshopAuth
+}
+
 // ================================== Function Plug=============================
 // ------ ต้องสร้างเพราะ type ที่เขาต้องการวุ่นวาย ----
 func jwtTimeDurationCal(t int) *jwt.NumericDate {
@@ -62,7 +73,7 @@ func jwtTimeRepeatAdapter(t int64) *jwt.NumericDate {
 	return jwt.NewNumericDate(time.Unix(t, 0)) // time ปกติจะมี type = int 64   แต่เรา้องการ time.time  = time.Unix convert sec to time.time
 }
 
-// Parse Token
+// -------------------- Parse Token  -------#1 : User Customer
 func ParseToken(cfg config.IJwtConfig, tokenString string) (*phurinshopMapClaims, error) {
 
 	//ParseWithClaims มี playload, Parse ไม่มี payload
@@ -93,7 +104,7 @@ func ParseToken(cfg config.IJwtConfig, tokenString string) (*phurinshopMapClaims
 	//Output struct ที่เป็น playload, callback Function เอาไว้ตรวจ อัลกอ ว่า sign มาอย่างไร
 }
 
-// Parse Token Admin
+// -------------------- Parse Token  -------#2 : User Admin
 func ParseAdminToken(cfg config.IJwtConfig, tokenString string) (*phurinshopMapClaims, error) {
 
 	//ParseWithClaims มี playload, Parse ไม่มี payload
@@ -102,6 +113,37 @@ func ParseAdminToken(cfg config.IJwtConfig, tokenString string) (*phurinshopMapC
 			return nil, fmt.Errorf("signing method is invalid")
 		}
 		return cfg.AdminKey(), nil //***************** สิ่งที่แตกต่าง
+	})
+
+	//เช็ครูปแบบ
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenMalformed) {
+			return nil, fmt.Errorf("token format is invalid")
+		} else if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, fmt.Errorf("token had expired")
+		} else {
+			return nil, fmt.Errorf("parse token failed: %v", err)
+		}
+	}
+
+	//Claim Check
+	if claims, ok := token.Claims.(*phurinshopMapClaims); ok {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("claims type is invalid")
+	}
+	//Output struct ที่เป็น playload, callback Function เอาไว้ตรวจ อัลกอ ว่า sign มาอย่างไร
+}
+
+// -------------------- Parse Token  -------#3 : API key
+func ParseApiKey(cfg config.IJwtConfig, tokenString string) (*phurinshopMapClaims, error) {
+
+	//ParseWithClaims มี playload, Parse ไม่มี payload
+	token, err := jwt.ParseWithClaims(tokenString, &phurinshopMapClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("signing method is invalid")
+		}
+		return cfg.ApiKey(), nil //***************** สิ่งที่แตกต่าง
 	})
 
 	//เช็ครูปแบบ
@@ -153,6 +195,8 @@ func NewphurinshopAuth(tokenType TokenType, cfg config.IJwtConfig, claims *users
 		return newRefreshToken(cfg, claims), nil
 	case Admin:
 		return newAdminToken(cfg), nil
+	case ApiKey:
+		return newApiKey(cfg), nil
 	default:
 		return nil, fmt.Errorf("Unknow token type")
 	}
@@ -215,7 +259,29 @@ func newAdminToken(cfg config.IJwtConfig) IPhurinshopAuth {
 	}
 }
 
+// ------------------------ ConcretorCreator #3 : APIToken
+
+func newApiKey(cfg config.IJwtConfig) IPhurinshopAuth {
+	return &phurinshopApiKey{ //ต้อง return ซ้อนเพราะสืบทอดมา
+		phurinshopAuth: &phurinshopAuth{
+			cfg: cfg,
+			mapClaims: &phurinshopMapClaims{
+				Claims: nil, //ไม่จำเป็นต้องมี payload
+				RegisteredClaims: jwt.RegisteredClaims{ //มาจาก jwt-go jwt.RegisteredClaims
+					Issuer:    "phurinshop-api",
+					Subject:   "api-key",
+					Audience:  []string{"admin", "customer"},
+					ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(2, 0, 0)), // 5min
+					NotBefore: jwt.NewNumericDate(time.Now()),                  //key นี้จะใช้ได้ตอนไหน
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
+			},
+		},
+	}
+}
+
 // ================================= missing Func =============================
+// ----------------------- Factory #1 : User Customer
 func (a *phurinshopAuth) SignToken() string {
 	//sign token  ด้วยฟังก์ชั่น missing Jwt ได้เลย แต่ยังไม่ใช่ string
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, a.mapClaims) //ใช้ key เดียว SigningMethodHS256  , hs Symatic, AES asymatic type
@@ -223,12 +289,20 @@ func (a *phurinshopAuth) SignToken() string {
 	return ss
 }
 
-// ----------------------- Factory #1
+// ----------------------- Factory #2 : User Admin
 func (a *phurinshopAdmin) SignToken() string {
 	//sign token  ด้วยฟังก์ชั่น missing Jwt ได้เลย แต่ยังไม่ใช่ string
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, a.mapClaims) //ใช้ key เดียว SigningMethodHS256  , hs Symatic, AES asymatic type
 	ss, _ := token.SignedString(a.cfg.AdminKey())                   //อาจใช้ key gen เลขได้
 	return ss
+	//เขียน Parse Token ด้วย
+}
 
+// ----------------------- Factory #3 : API key
+func (a *phurinshopApiKey) SignToken() string {
+	//sign token  ด้วยฟังก์ชั่น missing Jwt ได้เลย แต่ยังไม่ใช่ string
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, a.mapClaims) //ใช้ key เดียว SigningMethodHS256  , hs Symatic, AES asymatic type
+	ss, _ := token.SignedString(a.cfg.ApiKey())                     //อาจใช้ key gen เลขได้
+	return ss
 	//เขียน Parse Token ด้วย
 }
