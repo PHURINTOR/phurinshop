@@ -115,6 +115,13 @@ func (m *moduleFactory) FilesModule() {
 	usecase := filesUsecases.FilesUsecase(m.server.cfg)
 	handler := filesHandlers.FilesHandler(m.server.cfg, usecase)
 	router := m.router.Group("/files")
-	_ = router
-	_ = handler
+
+	// Upload Files
+	router.Post("/upload", m.mid.JwtAuth(), m.mid.Authorize(2), handler.UploadFiles)
+
+	// Delete Files
+	router.Patch("/delete", m.mid.JwtAuth(), m.mid.Authorize(2), handler.DeleteFile)
+
+	// *** เหตุผลที่ใช้ Patch เพราะสามารถเพิ่ม Body เข้าไปได้
+
 }
