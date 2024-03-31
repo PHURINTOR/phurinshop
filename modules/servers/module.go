@@ -4,6 +4,8 @@ import (
 	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoRepositories"
 	"github.com/PHURINTOR/phurinshop/modules/appinfo/appinfoUsecases"
+	"github.com/PHURINTOR/phurinshop/modules/files/filesHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/files/filesUsecases"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewareUsecases"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
@@ -20,6 +22,7 @@ type IModuleFactory interface {
 	MonitorModule()
 	UsersModule()
 	AppinfoModule()
+	FilesModule()
 }
 
 //struct
@@ -102,5 +105,23 @@ func (m *moduleFactory) AppinfoModule() {
 
 	//Delete Category
 	router.Delete("/:category_id/categories", m.mid.JwtAuth(), m.mid.Authorize(2), handler.RemoveCategory)
+
+}
+
+// ============================================================ FilesModule ===========================================
+// ============================  /v1/Files/ =================================
+func (m *moduleFactory) FilesModule() {
+
+	usecase := filesUsecases.FilesUsecase(m.server.cfg)
+	handler := filesHandlers.FilesHandler(m.server.cfg, usecase)
+	router := m.router.Group("/files")
+
+	// Upload Files
+	router.Post("/upload", m.mid.JwtAuth(), m.mid.Authorize(2), handler.UploadFiles)
+
+	// Delete Files
+	router.Patch("/delete", m.mid.JwtAuth(), m.mid.Authorize(2), handler.DeleteFile)
+
+	// *** เหตุผลที่ใช้ Patch เพราะสามารถเพิ่ม Body เข้าไปได้
 
 }
