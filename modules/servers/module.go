@@ -10,6 +10,9 @@ import (
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
 	monitorHanders "github.com/PHURINTOR/phurinshop/modules/monitors/monitorHandlers"
+	productshandlers "github.com/PHURINTOR/phurinshop/modules/products/productsHandlers"
+	productsrepositories "github.com/PHURINTOR/phurinshop/modules/products/productsRepositories"
+	"github.com/PHURINTOR/phurinshop/modules/products/productsUsecases"
 	"github.com/PHURINTOR/phurinshop/modules/users/usersHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/users/usersRepositories"
 	"github.com/PHURINTOR/phurinshop/modules/users/usersUsecases"
@@ -23,6 +26,7 @@ type IModuleFactory interface {
 	UsersModule()
 	AppinfoModule()
 	FilesModule()
+	ProductsModule()
 }
 
 //struct
@@ -124,4 +128,17 @@ func (m *moduleFactory) FilesModule() {
 
 	// *** เหตุผลที่ใช้ Patch เพราะสามารถเพิ่ม Body เข้าไปได้
 
+}
+
+// ============================================================ ProductsModule ===========================================
+func (m *moduleFactory) ProductsModule() {
+	filesUsecases := filesUsecases.FilesUsecase(m.server.cfg)
+
+	repository := productsrepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecases)
+	usecase := productsUsecases.ProductsUsecase(repository)
+	handler := productshandlers.ProductsHandle(m.server.cfg, usecase, filesUsecases)
+
+	router := m.router.Group("/products")
+	_ = handler
+	_ = router
 }
