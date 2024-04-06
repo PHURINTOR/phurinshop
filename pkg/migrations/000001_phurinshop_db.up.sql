@@ -107,6 +107,15 @@ CREATE TABLE "products_orders" (
   "product" jsonb
 );
 
+-- auto delete foreign key
+ALTER TABLE "users" ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id") ON DELETE CASCADE;
+ALTER TABLE "oauth" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id")  ON DELETE CASCADE;
+ALTER TABLE "images" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id")  ON DELETE CASCADE;
+ALTER TABLE "products_categories" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id") ON DELETE CASCADE;
+ALTER TABLE "products_categories" ADD FOREIGN KEY ("category_id") REFERENCES "categories" ("id") ON DELETE CASCADE;
+ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;
+ALTER TABLE "products_orders" ADD FOREIGN KEY ("order_id") REFERENCES "orders" ("id") ON DELETE CASCADE;
+
 
 -- Create Trigger update at
 CREATE TRIGGER set_updated_at_timestamp_users_table BEFORE UPDATE ON "users" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();

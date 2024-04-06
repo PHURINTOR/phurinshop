@@ -139,6 +139,15 @@ func (m *moduleFactory) ProductsModule() {
 	handler := productshandlers.ProductsHandle(m.server.cfg, usecase, filesUsecases)
 
 	router := m.router.Group("/products")
-	_ = handler
-	_ = router
+
+	// FindOneProduct
+	router.Get("/:product_id", m.mid.ApiKeyAuth(), handler.FindOneProduct)
+	// FindProducts
+	router.Get("/", m.mid.ApiKeyAuth(), handler.FindProducts)
+	// AddProduct
+	router.Post("/", m.mid.JwtAuth(), m.mid.Authorize(2), handler.AddProducts)
+	// UpdateProduct
+	router.Patch("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), handler.UpdateProducts)
+	// DELETE
+	router.Delete("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), handler.DeleteProduct)
 }
