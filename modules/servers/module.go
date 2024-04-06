@@ -10,6 +10,9 @@ import (
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresHandlers"
 	"github.com/PHURINTOR/phurinshop/modules/middlewares/middlewaresRepositories"
 	monitorHanders "github.com/PHURINTOR/phurinshop/modules/monitors/monitorHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/orders/odersHandlers"
+	"github.com/PHURINTOR/phurinshop/modules/orders/odersRepositories"
+	"github.com/PHURINTOR/phurinshop/modules/orders/odersUsecases"
 	productshandlers "github.com/PHURINTOR/phurinshop/modules/products/productsHandlers"
 	productsrepositories "github.com/PHURINTOR/phurinshop/modules/products/productsRepositories"
 	"github.com/PHURINTOR/phurinshop/modules/products/productsUsecases"
@@ -27,6 +30,7 @@ type IModuleFactory interface {
 	AppinfoModule()
 	FilesModule()
 	ProductsModule()
+	OdersModule()
 }
 
 //struct
@@ -150,4 +154,21 @@ func (m *moduleFactory) ProductsModule() {
 	router.Patch("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), handler.UpdateProducts)
 	// DELETE
 	router.Delete("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), handler.DeleteProduct)
+}
+
+// ============================================================ OdersModule ===========================================
+func (m *moduleFactory) OdersModule() {
+	filesUsecases := filesUsecases.FilesUsecase(m.server.cfg)
+	productRepository := productsrepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecases)
+
+	repository := odersRepositories.OdersRepository(m.server.db)
+	usecase := odersUsecases.OdersUsecase(repository, productRepository)
+	handler := odersHandlers.OdersHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/orders")
+
+	_ = handler
+	_ = router
+	// FindOneProduct
+
 }
