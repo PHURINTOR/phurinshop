@@ -15,6 +15,6 @@ type FileRes struct {
 	//respone detail file after Register file
 }
 
-type DeleteFileRes struct {
+type DeleteFileReq struct {
 	Destination string `json:"destination"`
 }

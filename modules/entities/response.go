@@ -21,6 +21,16 @@ type Response struct {
 
 }
 
+// ------------  FindProduct ---------------
+// paginateRes
+type PaginateRes struct {
+	Data      any `json:"data"`
+	Page      int `json:"page"`
+	Limit     int `json:"limit"`
+	TotalPage int `json:"tota_page"`
+	TotalItem int `json:"total_item"`
+}
+
 // ----------------------------------------------------------------------
 type ErrorResponse struct {
 	TraceId string `json:"trace_id"` //id ของ error นั้นๆ

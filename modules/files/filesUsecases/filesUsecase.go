@@ -16,7 +16,7 @@ import (
 // ======================================= Interface =========================================
 type IFilesUsecase interface {
 	UploadToGCP(req []*files.FileReq) ([]*files.FileRes, error)
-	DeleteFileGCP(req []*files.DeleteFileRes) error
+	DeleteFileGCP(req []*files.DeleteFileReq) error
 }
 
 // ======================================= Struct ============================================
@@ -114,7 +114,7 @@ func (u *filesUsecase) uploadWorkers(ctx context.Context, client *storage.Client
 }
 
 // --------------- Delete File Fuction pre to pool worker
-func (u *filesUsecase) deleteFileWorker(ctx context.Context, client *storage.Client, jobs <-chan *files.DeleteFileRes, errs chan<- error) {
+func (u *filesUsecase) deleteFileWorker(ctx context.Context, client *storage.Client, jobs <-chan *files.DeleteFileReq, errs chan<- error) {
 	for job := range jobs {
 		o := client.Bucket(u.cfg.App().Gcpbucket()).Object(job.Destination)
 
@@ -192,7 +192,7 @@ func (u *filesUsecase) UploadToGCP(req []*files.FileReq) ([]*files.FileRes, erro
 }
 
 // ------------------------- Delete File to GCP -------
-func (u *filesUsecase) DeleteFileGCP(req []*files.DeleteFileRes) error {
+func (u *filesUsecase) DeleteFileGCP(req []*files.DeleteFileReq) error {
 
 	// 1. New Context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
@@ -206,7 +206,7 @@ func (u *filesUsecase) DeleteFileGCP(req []*files.DeleteFileRes) error {
 	defer client.Close()
 
 	// 3.1 inital
-	jobsCh := make(chan *files.DeleteFileRes, len(req)) //len(req) = buffer channal
+	jobsCh := make(chan *files.DeleteFileReq, len(req)) //len(req) = buffer channal
 	errCh := make(chan error, len(req))
 
 	// 3.2 Assign Req(array) to JobsCh(Chan) = (input) เพราะ req ไม่ได้เป็นตัวแปรชนิด Chan ** การจะให้ Chan สื่อสารกัน ต้องเป็น Chan ทั้งคู่

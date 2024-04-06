@@ -111,7 +111,7 @@ func (h *filesHandler) UploadFiles(c *fiber.Ctx) error {
 
 // ------------------------------- Delete File
 func (h *filesHandler) DeleteFile(c *fiber.Ctx) error {
-	req := make([]*files.DeleteFileRes, 0)
+	req := make([]*files.DeleteFileReq, 0)
 
 	//validate
 	if err := c.BodyParser(&req); err != nil {
