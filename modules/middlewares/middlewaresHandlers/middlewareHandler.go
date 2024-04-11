@@ -125,6 +125,9 @@ func (h *middlewareHandlers) JwtAuth() fiber.Handler {
 func (h *middlewareHandlers) ParamsCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userId := c.Locals("userId")
+		if c.Locals("userRoleId").(int) == 2 { //เช็คว่าเป็น admin ไหม
+			return c.Next()
+		}
 		if c.Params("user_id") != userId {
 			return entities.NewErrorResponse(c).Error(
 				fiber.ErrUnauthorized.Code,

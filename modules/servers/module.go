@@ -90,7 +90,7 @@ func (m *moduleFactory) UsersModule() {
 	//router.Get("/admin/secret", m.mid.JwtAuth(), m.mid.Authorize(1, 2), handler.GenerateAdminToken)
 
 	//Authorization
-	router.Get("/:user_id", m.mid.ApiKeyAuth(), m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
+	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile) //Path param
 }
 
 // ============================================================ AppinfoModule ===========================================
@@ -167,8 +167,15 @@ func (m *moduleFactory) OdersModule() {
 
 	router := m.router.Group("/orders")
 
-	_ = handler
-	_ = router
 	// FindOneProduct
+	router.Get("/:user_id/:order_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.FindOneOrder)
 
+	// FindOrder (Admin)
+	router.Get("/", m.mid.JwtAuth(), m.mid.Authorize(2), handler.FindOrder)
+
+	// Insert Order
+	router.Post("/", m.mid.JwtAuth(), handler.InsertOrder)
+
+	// Update Order
+	router.Patch("/:user_id/:order_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.UpdateOrder)
 }

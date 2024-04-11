@@ -1,7 +1,11 @@
 package orders
 
-import "github.com/PHURINTOR/phurinshop/modules/products"
+import (
+	"github.com/PHURINTOR/phurinshop/modules/entities"
+	"github.com/PHURINTOR/phurinshop/modules/products"
+)
 
+// ----------------------- FindOneOrder ----------------------------------------------
 type Oders struct {
 	Id          string           `db:"id" json:"id"`
 	UserId      string           `db:"id" json:"user_id"`
@@ -26,4 +30,14 @@ type ProductsOrder struct {
 	Id      string            `db:"id" json:"id"`
 	Qty     int               `db:"qty" json:"qty"`
 	Product *products.Product `db:"product" json:"product"`
+}
+
+// ----------------------- FindManyOrder ----------------------------------------------
+type OrderFilter struct {
+	Search    string `query:"search"` // user_id, address, contact
+	Status    string `query:"status"`
+	StartDate string `query:"start_date"`
+	EndDate   string `query:"end_date"`
+	*entities.PaginationReq
+	*entities.SortReq
 }
